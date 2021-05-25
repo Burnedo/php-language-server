@@ -423,13 +423,16 @@ class Index implements ReadableIndex, \Serializable
      */
     private function removeIndexedDefinition(int $level, array $parts, array &$storage, array &$rootStorage)
     {
+        if (!array_key_exists($level, $parts)) {
+            return;
+        }
         $part = $parts[$level];
 
         if ($level + 1 === count($parts)) {
             if (isset($storage[$part])) {
                 unset($storage[$part]);
 
-                if (0 === count($storage)) {
+                if (0 === count($storage) && $rootStorage) {
                     // parse again the definition tree to remove the parent
                     // when it has no more children
                     $this->removeIndexedDefinition(0, array_slice($parts, 0, $level), $rootStorage, $rootStorage);
