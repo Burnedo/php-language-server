@@ -29,7 +29,9 @@ class ProtocolStreamReader extends Emitter implements ProtocolReader
             Loop\removeReadStream($this->input);
         });
 
-        Loop\addReadStream($this->input, function () {
+        $logger = new StderrLogger();
+
+        Loop\addReadStream($this->input, function () use ($logger) {
             if (feof($this->input)) {
                 // If stream_select reported a status change for this stream,
                 // but the stream is EOF, it means it was closed.
@@ -52,8 +54,14 @@ class ProtocolStreamReader extends Emitter implements ProtocolReader
                         break;
                     case self::PARSE_BODY:
                         if (strlen($this->buffer) === $this->contentLength) {
-                            $msg = new Message(MessageBody::parse($this->buffer), $this->headers);
-                            $this->emit('message', [$msg]);
+                            try {
+                                $msg = new Message(MessageBody::parse($this->buffer), $this->headers);
+                                $this->emit('message', [$msg]);
+                            } catch (\Exception $e) {
+                                $logger->warning($e->getMessage(), [
+                                    'body' => $this->buffer,
+                                ]);
+                            }
                             $this->parsingMode = self::PARSE_HEADERS;
                             $this->headers = [];
                             $this->buffer = '';

@@ -4,7 +4,6 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use AdvancedJsonRpc\Message as MessageBody;
-use LanguageServer\Message;
 
 class Message
 {
